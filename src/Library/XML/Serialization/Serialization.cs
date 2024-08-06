@@ -18,10 +18,12 @@ public static class Serialization
 	public static void SerializeObject(SerializationSettings settings)
 	{
 		XmlSerializer serializer	= new(settings.SerializeType);
-		XmlWriter xmlwriter			= XmlWriter.Create(settings.OutputFile, settings.XmlSettings);
 
-		serializer.Serialize(xmlwriter, settings.SerializeObject);
-		xmlwriter.Close();
+		using (XmlWriter xmlwriter = XmlWriter.Create(settings.OutputFile, settings.XmlSettings))
+		{
+			serializer.Serialize(xmlwriter, settings.SerializeObject);
+			xmlwriter.Close();
+		}
 	}
 
 	/// <summary>
@@ -41,13 +43,16 @@ public static class Serialization
 	/// <param name="settings">SerializationSettings to use for writing.</param>
 	public static void SerializeObjectFullEndElement(SerializationSettings settings)
 	{
-		XmlSerializer serializer					= new(settings.SerializeType);
+		XmlSerializer serializer                    = new(settings.SerializeType);
 
-		XmlTextWriterFullEndElement textwriter		= new(settings.OutputFile, settings.XmlSettings);
-		XmlWriter xmlwriter							= XmlTextWriterFullEndElement.Create(textwriter, settings.XmlSettings);
+		XmlTextWriterFullEndElement textwriter      = new(settings.OutputFile, settings.XmlSettings);
 
-		serializer.Serialize(xmlwriter, settings.SerializeObject);
-		xmlwriter.Close();
+		using (XmlWriter xmlwriter = XmlTextWriterFullEndElement.Create(textwriter, settings.XmlSettings))
+		{ 
+			serializer.Serialize(xmlwriter, settings.SerializeObject);
+			textwriter.Close();
+			xmlwriter.Close();
+		}
 	}
 
 	/// <summary>
@@ -74,11 +79,12 @@ public static class Serialization
 	{
 		XmlSerializer serializer            = new(typeof(T));
 
-		XIncludingReader xmlincludingreader = new(file);
-		T? deserializedobject                = (T?)serializer.Deserialize(xmlincludingreader);
-		xmlincludingreader.Close();
-
-		return deserializedobject;
+		using (XIncludingReader xmlincludingreader = new(file))
+		{
+			T? deserializedobject                = (T?)serializer.Deserialize(xmlincludingreader);
+			xmlincludingreader.Close();
+			return deserializedobject;
+		}
 	}
 
 	#endregion
